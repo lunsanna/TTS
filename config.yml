@@ -1,0 +1,184 @@
+# ALL hyper-parameters are defined in this config file
+
+asa_args: 
+  drop_classes: []
+
+asa_training_args:
+  output_dir: "asa_output_fold_"
+  evaluation_strategy: "epoch"
+  save_strategy: "epoch"
+  learning_rate: 0.00003
+  per_device_train_batch_size: 2
+  gradient_accumulation_steps: 1
+  per_device_eval_batch_size: 2
+  num_train_epochs: 10
+  warmup_ratio: 0.1
+  load_best_model_at_end: true
+  save_total_limit: 1
+  metric_for_best_model: "f1"
+  push_to_hub: false
+  gradient_checkpointing: true
+
+# Some of them are taken from Yaroslav's shell script
+model_args:
+  # The name or path of the pre-trained model to use as a starting point
+  # Swedish
+  sv_pretrained: "KBLab/wav2vec2-large-voxrex-swedish"
+  # Finnish, not publicly available
+  fi_pretrained: "/scratch/elec/puhe/p/getmany1/wav2vec2_large_14.2k_fi_donatespeech_100h_SEGMENTED_13042022_60ep/checkpoint-11100"
+
+  # Directory to store output files, including model checkpoints
+  # output_dir: "output"
+
+  # Directory to store cached files for faster data loading
+  cache_dir: "cache"
+
+  # Whether to freeze the feature extractor
+  freeze_feature_encoder: true
+
+  # Whether to enable verbose logging
+  verbose_logging: true
+
+data_args:
+  # The path of the dataset to use, not on git 
+  csv_fi: "/scratch/work/lunt1/wav2vec2-finetune/csv/finnish_df_rounded_ratings.csv"
+  csv_sv: "/scratch/work/lunt1/wav2vec2-finetune/csv/swedish_df_rounded_ratings.csv"
+
+  # The name of the training split
+  # train_split_name: "train"
+
+  # The name of the validation split, "train" for training error, "validation" for test error
+  # validation_split_name: "train"
+
+  # orthography: "timit"
+
+  # Target sampling rate for the feature extractor, replace with a specific value
+  target_feature_extractor_sampling_rate: 16000
+  
+  # Number of workers for data preprocessing, replace "$(nproc)" with a specific number
+  # TODO: Handle this in the python code.
+  # preprocessing_num_workers: "$(nproc)"
+
+# used to create TrainAguments when fine-tuning Wav2Vec2ForCTC
+# for hyper params of asa model, run_asa_train
+training_args:
+  output_dir: "output"
+  
+  # Number of training epochs
+  num_train_epochs: 20
+
+  # Batch size for training
+  per_device_train_batch_size: 1
+
+  # Batch size for evaluation
+  per_device_eval_batch_size: 1
+
+  # Number of steps to accumulate gradients before performing an update
+  gradient_accumulation_steps: 4
+
+  # The strategy for evaluation during training, "steps" means evaluating at each logging step
+  evaluation_strategy: "epoch"
+  # eval_steps: 1
+
+  # The strategy for logging during training, "steps" means logging at each training step
+  logging_strategy: "epoch"
+
+  # The strategy for saving the model, "steps" means saving at each logging step
+  save_strategy: "epoch"
+  # save_steps: 1
+
+  learning_rate: 0.0001
+
+  warmup_ratio: 0.1
+
+  # Whether to group samples of similar length together
+  group_by_length: true
+
+  # Whether to enable gradient checkpointing for memory efficiency
+  gradient_checkpointing: true
+
+  # Whether to enable mixed precision training, only availble with CUDA
+  fp16: true
+
+  # The backend to use for half precision, "cuda_amp" for NVIDIA's Automatic Mixed Precision
+  half_precision_backend: "cuda_amp"
+
+  # With the following setting, only the last checkpoint is saved
+  load_best_model_at_end: false
+  save_total_limit: 1
+
+  # The metric to use to determine the best model
+  metric_for_best_model: "wer"
+
+  # Whether a higher metric score means a better model, false for Word Error Rate (WER) because a lower WER is better
+  greater_is_better: false
+
+  # ddp_find_unused_parameters: true
+
+augment_args:
+  # true = double the amount of training by adding an augmented copy 
+  # false = use only the augmented copy 
+  copy: true
+
+  # relevant for random_transform and resampling
+  max_num_of_transforms: 2
+
+  resample:
+    do_augment: true 
+    max_num_transforms: 2
+
+  time_masking:
+    # the max proportion of masked time steps, 0.2 means max 20% of the speech will be masked 
+    max_mask_proportion: 0.3
+
+    # the max window size of each mask, will be uniformly chosen in (0, 0.2]
+    # unit: second (0.2 == 200 ms)
+    # range of phonemem duration
+    max_mask_size: 0.2
+
+  band_reject:
+    # the window width of the mask , constant
+    max_mask_width: 27 # originally 64
+    # the max proportion of masked channels in the range specified above
+    # max_mask_proportion: 0.4  
+
+  pitch_shift:
+    # unit: cent, 
+    # pitch shift factor sampled from Gaussian(0, sigma)
+    sigma: 50
+  
+  reverberation: 
+    room_size_sigma: 60
+
+  additive_noise:
+    # the dir that contains the noise samples
+    noise_dir: "/scratch/work/lunt1/free-sound"
+
+    # snr range
+    snr_low: 10
+    snr_high: 50
+  
+
+  tempo_perturbation: 
+    perturbation_factors:
+      - 0.9
+      - 0.95
+      - 1.05
+      - 1.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

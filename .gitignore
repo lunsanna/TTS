@@ -1,0 +1,6 @@
+*.txt
+.ipynb_checkpoints/*
+*.wav
+*.csv
+*.err
+*.out
